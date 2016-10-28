@@ -1,13 +1,17 @@
-FROM maven:3.3-jdk-7
+FROM maven:3-jdk-7
+
+ENV SWAGGER_CODEGEN_DIR		/opt/swagger-codegen-prebuilt
+ENV SWAGGER_CODEGEN_CLI		$SWAGGER_CODEGEN_DIR/modules/swagger-codegen-cli/target/swagger-codegen-cli.jar
+
+RUN git clone -b master https://github.com/cdyue/swagger-codegen.git $SWAGGER_CODEGEN_DIR \
+ && cd $SWAGGER_CODEGEN_DIR \
+ && mvn package \
+ && printf '#!/bin/bash\njava -jar $SWAGGER_CODEGEN_CLI $@\n' > /bin/swagger-codegen \
+ && chmod a+x /bin/swagger-codegen
 
 WORKDIR /src
 VOLUME  /src
-VOLUME  /root/.m2/repository
 
-ADD . /opt/swagger-codegen
-
-RUN cd /opt/swagger-codegen && mvn package
-
-ENTRYPOINT ["java", "-jar", "/opt/swagger-codegen/modules/swagger-codegen-cli/target/swagger-codegen-cli.jar"]
+ENTRYPOINT ["swagger-codegen"]
 
 CMD ["help"]
